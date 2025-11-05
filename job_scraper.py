@@ -361,10 +361,37 @@ class JobScraper:
     
     def _hash_job(self, job: Dict) -> str:
         """Create unique hash for job to avoid duplicates"""
-        # Use title, company, and normalized URL for uniqueness
-        url_normalized = job['url'].split('?')[0]  # Remove query params
-        unique_str = f"{job['title']}{job['company']}{url_normalized}"
+        # Normalize title and company for better deduplication
+        title = re.sub(r'[^\w\s]', '', job['title'].lower()).strip()
+        company = re.sub(r'[^\w\s]', '', job['company'].lower()).strip()
+        
+        # Remove common variations
+        title = title.replace('junior', '').replace('senior', '').replace('entry level', '').strip()
+        title = re.sub(r'\s+', ' ', title)  # Normalize spaces
+        
+        # Use title, company for main uniqueness
+        # URL as secondary (some sites post same job multiple times with different URLs)
+        url_normalized = job['url'].split('?')[0].split('#')[0]  # Remove query params and anchors
+        unique_str = f"{title}||{company}||{url_normalized}"
         return hashlib.md5(unique_str.encode()).hexdigest()
+    
+    def _is_similar_job(self, job1: Dict, job2: Dict) -> bool:
+        """Check if two jobs are similar (likely duplicates)"""
+        # Normalize titles for comparison
+        title1 = re.sub(r'[^\w\s]', '', job1['title'].lower()).strip()
+        title2 = re.sub(r'[^\w\s]', '', job2['title'].lower()).strip()
+        
+        # Same company and very similar titles = duplicate
+        if job1['company'].lower() == job2['company'].lower():
+            # Calculate simple word overlap
+            words1 = set(title1.split())
+            words2 = set(title2.split())
+            if len(words1) > 0 and len(words2) > 0:
+                overlap = len(words1 & words2) / min(len(words1), len(words2))
+                if overlap > 0.7:  # 70% word overlap
+                    return True
+        
+        return False
     
     def _save_job(self, job: Dict, job_hash: str):
         """Save job to database"""
@@ -1815,9 +1842,22 @@ class JobScraper:
             try:
                 logger.info(f"🤖 Using AI to generate additional search variations...")
                 ai_queries = await self.job_discovery.generate_search_queries(queries[0])
-                # Combine original queries with AI-generated ones (limit total)
-                queries = list(set(queries + ai_queries))[:15]  # Limit to 15 total queries
-                logger.info(f"✨ Enhanced search with {len(queries)} query variations")
+                
+                # Combine and deduplicate queries
+                all_queries = queries + ai_queries
+                
+                # Normalize and deduplicate (case-insensitive, remove duplicates)
+                unique_queries = []
+                seen_normalized = set()
+                for q in all_queries:
+                    normalized = q.lower().strip()
+                    if normalized not in seen_normalized:
+                        unique_queries.append(q)
+                        seen_normalized.add(normalized)
+                
+                # Limit to reasonable number to avoid duplicate job flood
+                queries = unique_queries[:8]  # Reduced from 15 to 8 to minimize duplicates
+                logger.info(f"✨ Enhanced search with {len(queries)} unique query variations")
             except Exception as e:
                 logger.warning(f"Could not enhance queries with AI: {e}")
         
@@ -1908,34 +1948,76 @@ class JobScraper:
     async def process_jobs(self, jobs: List[Dict]):
         """Process scraped jobs, filter, and send new ones to Telegram"""
         new_jobs_count = 0
+        site_job_counts = {}  # Track jobs per site for reporting
+        processed_jobs = []  # Store processed jobs for similarity checking
         
+        # Group jobs by site for better distribution
+        jobs_by_site = {}
         for job in jobs:
-            # Apply filters
-            if not self.job_filter.matches(job):
-                self.stats.record_filtered()
-                continue
-            
-            # Check for duplicates
-            job_hash = self._hash_job(job)
-            
-            if job_hash in self.seen_jobs:
-                self.stats.record_duplicate()
-                continue
-            
-            # New job found!
-            self.seen_jobs.add(job_hash)
-            self._save_job(job, job_hash)
-            self.stats.record_new(job['site'])
-            
-            # Send to Telegram
-            await self.send_telegram_message(job)
-            new_jobs_count += 1
-            
-            # Rate limit to avoid Telegram flooding (max 30 msgs/second)
-            await asyncio.sleep(0.5)
+            site = job['site']
+            if site not in jobs_by_site:
+                jobs_by_site[site] = []
+            jobs_by_site[site].append(job)
+        
+        logger.info(f"📊 Raw job counts by site: {', '.join([f'{site}: {len(jobs_by_site[site])}' for site in jobs_by_site])}")
+        
+        # Process jobs in round-robin fashion from each site for better distribution
+        # This prevents one site from flooding notifications before others get a chance
+        max_iterations = max(len(site_jobs) for site_jobs in jobs_by_site.values()) if jobs_by_site else 0
+        
+        for i in range(max_iterations):
+            for site in sorted(jobs_by_site.keys()):  # Sort for consistent ordering
+                site_jobs = jobs_by_site[site]
+                if i >= len(site_jobs):
+                    continue
+                
+                job = site_jobs[i]
+                
+                # Apply filters
+                if not self.job_filter.matches(job):
+                    self.stats.record_filtered()
+                    continue
+                
+                # Check for duplicates by hash
+                job_hash = self._hash_job(job)
+                
+                if job_hash in self.seen_jobs:
+                    self.stats.record_duplicate()
+                    continue
+                
+                # Check for similar jobs (catch duplicates with slightly different titles/URLs)
+                is_similar = False
+                for processed_job in processed_jobs[-100:]:  # Check last 100 jobs
+                    if self._is_similar_job(job, processed_job):
+                        logger.debug(f"Similar job found: {job['title']} at {job['company']}")
+                        self.stats.record_duplicate()
+                        is_similar = True
+                        break
+                
+                if is_similar:
+                    continue
+                
+                # New job found!
+                self.seen_jobs.add(job_hash)
+                self._save_job(job, job_hash)
+                self.stats.record_new(job['site'])
+                processed_jobs.append(job)
+                
+                # Track for reporting
+                if site not in site_job_counts:
+                    site_job_counts[site] = 0
+                site_job_counts[site] += 1
+                
+                # Send to Telegram
+                await self.send_telegram_message(job)
+                new_jobs_count += 1
+                
+                # Rate limit to avoid Telegram flooding (max 30 msgs/second)
+                await asyncio.sleep(0.5)
         
         if new_jobs_count > 0:
-            logger.info(f"[NEW] Found {new_jobs_count} new jobs")
+            logger.info(f"✅ [NEW] Found {new_jobs_count} new jobs")
+            logger.info(f"📊 [DISTRIBUTION] Jobs sent per site: {', '.join([f'{site}: {count}' for site, count in sorted(site_job_counts.items())])}")
         else:
             logger.info("No new jobs found this cycle")
         

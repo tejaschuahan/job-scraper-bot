@@ -82,37 +82,36 @@ Provide 8-10 best sources.
         """
         try:
             prompt = f"""
-Generate 15-20 effective job search queries for finding "{role}" positions.
+Generate 8-10 DISTINCT and DIFFERENT job search queries for finding "{role}" positions.
+
+IMPORTANT: Make each query meaningfully different to avoid duplicate results.
 
 Include:
-- Exact role name
-- Common variations and synonyms
-- Related roles
-- Industry-specific terms
-- Seniority variations (junior, associate, entry-level)
-- Abbreviated versions
-- Alternative titles
+- Exact role name (1 query)
+- Most common synonym (1 query)
+- Seniority variations (2-3 queries: junior, associate, entry-level)
+- Related but different roles (2-3 queries)
+- Industry-specific terms (1-2 queries)
 
 Examples for "data analyst":
 - data analyst
-- business data analyst
+- business intelligence analyst
 - junior data analyst
-- associate analyst
-- data analytics
-- analyst data
+- entry level analyst
 - BI analyst
 - reporting analyst
+- analytics engineer
 
-Return ONLY a JSON array of strings:
+Return ONLY a JSON array of strings (8-10 queries max):
 ["query1", "query2", "query3", ...]
 
-No explanations, just the array.
+No explanations, no duplicates, just distinct queries.
 """
             
             response = self.model.generate_content(prompt)
             queries = json.loads(response.text.strip())
-            logger.info(f"🔤 Generated {len(queries)} search variations for {role}")
-            return queries[:20]  # Limit to 20
+            logger.info(f"🔤 Generated {len(queries)} distinct search variations for {role}")
+            return queries[:10]  # Limit to 10 max
             
         except Exception as e:
             logger.error(f"Error generating search queries: {e}")
