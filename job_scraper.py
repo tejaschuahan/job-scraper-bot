@@ -283,13 +283,18 @@ class JobScraper:
         
         # Initialize Gemini AI (optional)
         self.gemini = None
+        self.job_discovery = None
         gemini_config = config.get('gemini', {})
         if gemini_config.get('enabled', False):
             try:
                 from gemini_ai import get_gemini_ai
+                from gemini_job_discovery import get_job_discovery
                 self.gemini = get_gemini_ai()
                 if self.gemini:
                     logger.info("✨ Gemini AI features enabled")
+                    self.job_discovery = get_job_discovery(self.gemini)
+                    if self.job_discovery:
+                        logger.info("🔍 Gemini Job Discovery enabled")
             except Exception as e:
                 logger.warning(f"⚠️ Could not initialize Gemini AI: {e}")
         
@@ -1755,6 +1760,17 @@ class JobScraper:
     async def scrape_all_sites(self, queries: List[str]) -> List[Dict]:
         """Scrape multiple job sites concurrently"""
         all_jobs = []
+        
+        # Enhance queries with AI if available
+        if self.job_discovery and len(queries) > 0:
+            try:
+                logger.info(f"🤖 Using AI to generate additional search variations...")
+                ai_queries = await self.job_discovery.generate_search_queries(queries[0])
+                # Combine original queries with AI-generated ones (limit total)
+                queries = list(set(queries + ai_queries))[:15]  # Limit to 15 total queries
+                logger.info(f"✨ Enhanced search with {len(queries)} query variations")
+            except Exception as e:
+                logger.warning(f"Could not enhance queries with AI: {e}")
         
         # Initialize stealth browser if enabled
         if self.use_stealth and STEALTH_AVAILABLE and not self.stealth_scraper:

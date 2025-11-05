@@ -147,11 +147,16 @@ class InteractiveJobBot:
         
         # Initialize Gemini AI if enabled
         self.gemini = None
+        self.job_discovery = None
         gemini_config = self.config.get('gemini', {})
         if gemini_config.get('enabled', False):
             try:
                 from gemini_ai import get_gemini_ai
+                from gemini_job_discovery import get_job_discovery
                 self.gemini = get_gemini_ai()
+                if self.gemini:
+                    self.job_discovery = get_job_discovery(self.gemini)
+                    logger.info("🔍 Gemini Job Discovery enabled")
             except Exception as e:
                 logger.warning(f"⚠️ Could not initialize Gemini AI: {e}")
     
@@ -498,29 +503,205 @@ class InteractiveJobBot:
                 parse_mode='Markdown'
             )
     
+    async def discover_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Discover job boards and sources using AI"""
+        if not self.job_discovery:
+            await update.message.reply_text(
+                "⚠️ Job discovery requires Gemini AI. Please enable it first.",
+                parse_mode='Markdown'
+            )
+            return
+        
+        role = ' '.join(context.args) if context.args else None
+        
+        if not role:
+            await update.message.reply_text(
+                "🔍 **AI Job Discovery**\n\n"
+                "I'll find the best job boards and sources for your role!\n\n"
+                "**Usage:** `/discover <role>`\n\n"
+                "**Examples:**\n"
+                "• `/discover data analyst`\n"
+                "• `/discover python developer`\n"
+                "• `/discover business analyst`",
+                parse_mode='Markdown'
+            )
+            return
+        
+        await update.message.reply_text(
+            f"🔍 Discovering job sources for **{role}**...",
+            parse_mode='Markdown'
+        )
+        
+        try:
+            # Discover job boards
+            sources = await self.job_discovery.discover_job_boards(role, "India")
+            
+            if sources:
+                message = f"✨ **Found {len(sources)} Job Sources for {role}:**\n\n"
+                for i, source in enumerate(sources[:8], 1):
+                    message += f"{i}. **{source['name']}**\n"
+                    message += f"   🔗 {source['url']}\n"
+                    message += f"   📊 Expected: {source['expected_count']} listings\n\n"
+                
+                message += "\n💡 **Tip:** Visit these sites directly for more opportunities!"
+                
+                await update.message.reply_text(message, parse_mode='Markdown', disable_web_page_preview=True)
+            else:
+                await update.message.reply_text(
+                    "❌ Could not discover sources. Try again later.",
+                    parse_mode='Markdown'
+                )
+                
+        except Exception as e:
+            logger.error(f"Error in discover command: {e}")
+            await update.message.reply_text(
+                "❌ Error discovering sources. Please try again.",
+                parse_mode='Markdown'
+            )
+    
+    async def market_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Get market analysis for a role"""
+        if not self.job_discovery:
+            await update.message.reply_text(
+                "⚠️ Market analysis requires Gemini AI.",
+                parse_mode='Markdown'
+            )
+            return
+        
+        role = ' '.join(context.args) if context.args else None
+        
+        if not role:
+            await update.message.reply_text(
+                "📊 **Job Market Analysis**\n\n"
+                "**Usage:** `/market <role>`\n\n"
+                "**Example:** `/market data analyst`",
+                parse_mode='Markdown'
+            )
+            return
+        
+        await update.message.reply_text(
+            f"📊 Analyzing job market for **{role}**...",
+            parse_mode='Markdown'
+        )
+        
+        try:
+            analysis = await self.job_discovery.analyze_job_market(role, "India")
+            
+            if analysis:
+                message = f"📊 **Market Analysis: {role}**\n\n"
+                message += f"📈 **Demand:** {analysis.get('demand', 'N/A')}\n"
+                message += f"💰 **Salary:** {analysis.get('salary_range', 'N/A')}\n"
+                message += f"📍 **Top Cities:** {', '.join(analysis.get('top_cities', [])[:3])}\n"
+                message += f"🎯 **Key Skills:** {', '.join(analysis.get('key_skills', [])[:5])}\n"
+                message += f"📈 **Trend:** {analysis.get('trend', 'N/A')}\n\n"
+                message += f"💡 **Advice:** {analysis.get('advice', 'Keep applying!')}"
+                
+                await update.message.reply_text(message, parse_mode='Markdown')
+            else:
+                await update.message.reply_text(
+                    "❌ Could not analyze market. Try again later.",
+                    parse_mode='Markdown'
+                )
+                
+        except Exception as e:
+            logger.error(f"Error in market command: {e}")
+            await update.message.reply_text(
+                "❌ Error analyzing market. Please try again.",
+                parse_mode='Markdown'
+            )
+    
+    async def strategy_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Get personalized job search strategy"""
+        if not self.job_discovery:
+            await update.message.reply_text(
+                "⚠️ Strategy requires Gemini AI.",
+                parse_mode='Markdown'
+            )
+            return
+        
+        role = ' '.join(context.args) if context.args else None
+        
+        if not role:
+            await update.message.reply_text(
+                "🎯 **Personalized Search Strategy**\n\n"
+                "**Usage:** `/strategy <role>`\n\n"
+                "**Example:** `/strategy junior data analyst`",
+                parse_mode='Markdown'
+            )
+            return
+        
+        await update.message.reply_text(
+            f"🎯 Creating strategy for **{role}**...",
+            parse_mode='Markdown'
+        )
+        
+        try:
+            user_profile = {
+                'experience': 'Entry-level',
+                'skills': ['Python', 'SQL', 'Excel'],
+                'location': 'Flexible'
+            }
+            
+            strategy = await self.job_discovery.optimize_search_strategy(role, user_profile)
+            
+            if strategy:
+                message = f"🎯 **Search Strategy: {role}**\n\n"
+                message += f"**Priority Job Boards:**\n"
+                for board in strategy.get('priority_boards', [])[:5]:
+                    message += f"• {board}\n"
+                message += f"\n**Keywords to Use:**\n{', '.join(strategy.get('keywords', [])[:5])}\n"
+                message += f"\n**Target Companies:**\n"
+                for company in strategy.get('target_companies', [])[:3]:
+                    message += f"• {company}\n"
+                message += f"\n**Highlight Skills:**\n{', '.join(strategy.get('highlight_skills', [])[:4])}\n"
+                message += f"\n💡 **Tips:**\n"
+                for tip in strategy.get('tips', [])[:3]:
+                    message += f"• {tip}\n"
+                
+                await update.message.reply_text(message, parse_mode='Markdown')
+            else:
+                await update.message.reply_text(
+                    "❌ Could not generate strategy. Try again later.",
+                    parse_mode='Markdown'
+                )
+                
+        except Exception as e:
+            logger.error(f"Error in strategy command: {e}")
+            await update.message.reply_text(
+                "❌ Error generating strategy. Please try again.",
+                parse_mode='Markdown'
+            )
+    
     async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Show help message"""
         ai_commands = ""
         if self.gemini:
-            ai_commands = "/find <query> - AI-powered natural language search ✨\n"
+            ai_commands = (
+                "/find <query> - Natural language search ✨\n"
+                "/discover <role> - Find job boards & sources 🔍\n"
+                "/market <role> - Market analysis & insights 📊\n"
+                "/strategy <role> - Personalized search strategy 🎯\n"
+            )
         
         await update.message.reply_text(
             "🤖 **Job Scraper Bot - Help**\n\n"
-            "**Commands:**\n"
+            "**Basic Commands:**\n"
             "/start - Welcome message\n"
-            "/search - Start a guided job search\n"
-            f"{ai_commands}"
+            "/search - Guided job search\n"
             "/stop - Stop your active search\n"
-            "/status - Check your current search status\n"
-            "/help - Show this help message\n\n"
+            "/status - Check search status\n"
+            "/help - Show this help\n\n"
+            f"**AI-Powered Commands:** ✨\n{ai_commands}\n"
             "**How it works:**\n"
-            "1️⃣ Use /search (guided) or /find (natural language)\n"
-            "2️⃣ I'll automatically search related roles\n"
-            "3️⃣ You'll get notifications for new jobs every 6 hours\n"
-            "4️⃣ Use /stop when you want to stop\n\n"
-            "**Supported Sites:**\n"
-            "LinkedIn, Remotive\n\n"
-            "**Location:** Major Indian cities + Remote",
+            "1️⃣ Use /search or /find to start\n"
+            "2️⃣ Get smart AI summaries for each job\n"
+            "3️⃣ Notifications every 6 hours\n"
+            "4️⃣ Use AI commands for market insights\n\n"
+            "**Features:**\n"
+            "• AI job summaries & quality scores\n"
+            "• Market intelligence & trends\n"
+            "• Personalized search strategies\n"
+            "• Job board discovery",
             parse_mode='Markdown'
         )
     
@@ -545,6 +726,9 @@ class InteractiveJobBot:
         application.add_handler(CommandHandler('start', self.start))
         application.add_handler(conv_handler)
         application.add_handler(CommandHandler('find', self.find_command))
+        application.add_handler(CommandHandler('discover', self.discover_command))
+        application.add_handler(CommandHandler('market', self.market_command))
+        application.add_handler(CommandHandler('strategy', self.strategy_command))
         application.add_handler(CommandHandler('stop', self.stop_command))
         application.add_handler(CommandHandler('status', self.status_command))
         application.add_handler(CommandHandler('help', self.help_command))
