@@ -54,5 +54,5 @@ Thumbs.db
 data/
 logs/
 
-# Config with secrets
-config.yaml
+# Config with secrets (comment out to push to private repo)
+# config.yaml

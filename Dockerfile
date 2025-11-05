@@ -15,10 +15,8 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY interactive_bot.py .
-COPY job_scraper.py .
-COPY config.yaml .
+# Copy all application code
+COPY . .
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1

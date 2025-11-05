@@ -1,0 +1,230 @@
+# ==========================================
+# Job Scraper Bot Configuration
+# ==========================================
+
+# Telegram Settings
+telegram:
+  bot_token: "8575752221:AAFHbL25N54TlwIJ1PHodzPED2rA_jaM3hA"  # Get from @BotFather on Telegram
+  chat_id: "1463818772"      # Your Telegram chat ID (use @userinfobot to get it)
+  
+  # Notification format customization
+  notification_format:
+    show_title: true
+    show_company: true
+    show_location: true
+    show_salary: true
+    show_job_type: true
+    show_site: true
+    show_description: false         # Set to true to include job description snippet
+    disable_preview: false          # Set to true to disable link previews
+
+# Database Settings
+database:
+  path: "jobs.db"                   # SQLite database file path
+
+# Search Settings
+search:
+  queries:
+    # Core Data & Analytics Roles
+    - "data analyst"
+    - "business analyst"
+    - "data scientist"
+    - "business intelligence analyst"
+    - "BI analyst"
+    - "analytics engineer"
+    - "data engineer"
+    
+    # Specialized Analytics Roles
+    - "financial analyst"
+    - "operations analyst"
+    - "product analyst"
+    - "marketing analyst"
+    - "research analyst"
+    - "quantitative analyst"
+    - "reporting analyst"
+    
+    # Insights & Strategy
+    - "business intelligence developer"
+    - "insights analyst"
+    - "decision scientist"
+    - "statistical analyst"
+    
+    # Data Visualization
+    - "tableau developer"
+    - "power bi developer"
+    - "data visualization specialist"
+    
+  default_location: "India"         # Default location for job searches
+
+# Site-Specific Settings
+sites:
+  linkedin:
+    enabled: true
+    # ✅ WORKS: Most reliable scraper
+    # LinkedIn's public job search (no auth required)
+    
+  remotive:
+    enabled: true
+    # ✅ WORKS: Free API, no key needed!
+    # Best for remote tech jobs - Very reliable
+    
+  glassdoor:
+    enabled: false
+    # ⚠️ BLOCKED: Timing out even with stealth mode
+    
+  google_jobs:
+    enabled: false
+    # ⚠️ BLOCKED: Timing out even with stealth mode
+    
+  indeed:
+    enabled: false
+    # ⚠️ BLOCKED: Timing out even with stealth mode
+  
+  # Indian Job Sites
+  naukri:
+    enabled: true
+    # 🇮🇳 Naukri.com - India's largest job portal
+    
+  foundit:
+    enabled: true
+    # 🇮🇳 Foundit (Monster India) - Major Indian job site
+    
+  shine:
+    enabled: true
+    # 🇮🇳 Shine.com - Popular Indian job portal
+    
+  timesjobs:
+    enabled: true
+    # 🇮🇳 TimesJobs - Part of Times Group
+    
+  instahyre:
+    enabled: true
+    # 🇮🇳 Instahyre - Tech jobs in India
+    
+  cutshort:
+    enabled: true
+    # 🇮🇳 Cutshort - Startup & tech jobs
+    
+  hirist:
+    enabled: true
+    # 🇮🇳 Hirist - IT/Tech jobs in India
+    
+  iimjobs:
+    enabled: true
+    # 🇮🇳 IIMJobs - Premium management & analytics jobs
+    
+  freshersworld:
+    enabled: true
+    # 🇮🇳 Freshersworld - Entry-level & fresher jobs
+    
+  linkedin_posts:
+    enabled: true
+    # 🔍 LinkedIn Posts - Job postings shared in posts/feed (not in jobs section)
+
+# Scraping Settings
+scraping:
+  interval: 300                     # Seconds between scraping cycles (300 = 5 minutes)
+  
+  # Stealth Mode - Bypass Anti-Bot Protection (Requires: playwright install)
+  use_stealth_mode: true            # Use real browser automation for blocked sites
+  stealth_headless: true            # Run browser in headless mode (false = visible browser)
+  
+  min_delay: 1.0                    # Minimum delay between requests (seconds)
+  max_delay: 3.0                    # Maximum delay between requests (seconds)
+  max_retries: 3                    # Maximum retry attempts for failed requests
+  retry_delay: 5                    # Base delay for exponential backoff (seconds)
+  connection_pool_size: 10          # Max concurrent connections
+  
+  # Proxy Settings (optional)
+  # Format: ["http://proxy1:port", "http://user:pass@proxy2:port", ...]
+  proxies: []
+  
+  # Examples:
+  # proxies:
+  #   - "http://proxy.example.com:8080"
+  #   - "http://username:password@proxy2.example.com:3128"
+  #   - "socks5://127.0.0.1:9050"  # Tor proxy example
+
+# Advanced Filtering
+filters:
+  # Include keywords (job must match at least ONE of these)
+  # Searches in title, description, and company name
+  include_keywords:
+    - "analyst"
+    - "data"
+    - "analytics"
+    - "business intelligence"
+    - "BI"
+    - "insights"
+    - "reporting"
+    - "engineer"
+    - "scientist"
+    - "research"
+    - "quantitative"
+    - "statistical"
+    - "tableau"
+    - "power bi"
+    - "visualization"
+    - "sql"
+    - "python"
+    - "excel"
+  
+  # Exclude keywords (job must NOT match ANY of these)
+  exclude_keywords:
+    - "senior"
+    - "lead"
+    - "manager"
+    - "director"
+    - "principal"
+  
+  # Location filtering (job must match at least ONE if specified)
+  locations:
+    - "India"
+    - "Bangalore"
+    - "Mumbai"
+    - "Delhi"
+    - "Hyderabad"
+    - "Pune"
+    - "Chennai"
+    - "Gurgaon"
+    - "Noida"
+    - "Remote"
+  
+  # Exclude locations (job must NOT match ANY of these)
+  exclude_locations:
+    # - "USA"
+    # - "UK"
+  
+  # Salary filtering (annual amounts in USD)
+  min_salary: null                  # Minimum salary (e.g., 60000)
+  max_salary: null                  # Maximum salary (e.g., 150000)
+  
+  # Job type filtering (full-time, part-time, contract, etc.)
+  job_types:
+    # - "full-time"
+    # - "full time"
+    # - "permanent"
+  
+  # Experience level filtering
+  experience_levels:
+    # - "entry level"
+    # - "junior"
+    # - "associate"
+    # - "mid-level"
+  
+  # Remote-only filtering
+  remote_only: false                # Set to true to only show remote jobs
+
+# Monitoring & Health Check
+monitoring:
+  stats_interval_hours: 24          # Send statistics summary every X hours
+  health_check_interval_minutes: 30 # Perform health check every X minutes
+  max_consecutive_failures: 5       # Alert after X consecutive failures
+  reset_stats_after_summary: false  # Reset statistics after sending summary
+
+# Logging Settings (handled in code, but you can reference this)
+logging:
+  level: "INFO"                     # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  file: "job_scraper.log"
+  max_size_mb: 10
+  backup_count: 5
