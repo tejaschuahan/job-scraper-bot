@@ -16,11 +16,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
+COPY interactive_bot.py .
 COPY job_scraper.py .
 COPY config.yaml .
-
-# Create volume mount points for persistence
-VOLUME ["/app/data"]
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
@@ -29,5 +27,5 @@ ENV PYTHONUNBUFFERED=1
 HEALTHCHECK --interval=5m --timeout=10s --start-period=30s --retries=3 \
     CMD python -c "import sqlite3; conn = sqlite3.connect('jobs.db'); conn.close()" || exit 1
 
-# Run the scraper
-CMD ["python", "job_scraper.py"]
+# Run the interactive bot
+CMD ["python", "interactive_bot.py"]
