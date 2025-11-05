@@ -25,36 +25,38 @@ database:
 # Search Settings
 search:
   queries:
-    # Core Data & Analytics Roles
+    # Entry-Level Data & Analytics Roles
+    - "junior data analyst"
+    - "entry level data analyst"
+    - "fresher data analyst"
+    - "junior business analyst"
+    - "entry level business analyst"
+    - "associate data analyst"
+    - "trainee data analyst"
+    
+    # Fresher/Graduate Positions
+    - "data analyst fresher"
+    - "business analyst fresher"
+    - "graduate data analyst"
+    - "graduate business analyst"
+    - "fresher analyst"
+    - "entry level analyst"
+    
+    # Junior Tech Roles
+    - "junior data scientist"
+    - "junior data engineer"
+    - "junior BI analyst"
+    - "associate analyst"
+    - "analyst trainee"
+    
+    # Generic searches (filtered by experience_levels)
     - "data analyst"
     - "business analyst"
     - "data scientist"
     - "business intelligence analyst"
     - "BI analyst"
-    - "analytics engineer"
-    - "data engineer"
     
-    # Specialized Analytics Roles
-    - "financial analyst"
-    - "operations analyst"
-    - "product analyst"
-    - "marketing analyst"
-    - "research analyst"
-    - "quantitative analyst"
-    - "reporting analyst"
-    
-    # Insights & Strategy
-    - "business intelligence developer"
-    - "insights analyst"
-    - "decision scientist"
-    - "statistical analyst"
-    
-    # Data Visualization
-    - "tableau developer"
-    - "power bi developer"
-    - "data visualization specialist"
-    
-  default_location: "India"         # Default location for job searches
+  default_location: "Bangalore, India"  # Default location for job searches
 
 # Site-Specific Settings
 sites:
@@ -160,14 +162,19 @@ filters:
     - "engineer"
     - "scientist"
     - "research"
-    - "quantitative"
-    - "statistical"
-    - "tableau"
-    - "power bi"
-    - "visualization"
+    - "fresher"
+    - "entry level"
+    - "junior"
+    - "associate"
+    - "graduate"
+    - "trainee"
+    - "0-1 year"
+    - "0-2 years"
     - "sql"
     - "python"
     - "excel"
+    - "tableau"
+    - "power bi"
   
   # Exclude keywords (job must NOT match ANY of these)
   exclude_keywords:
@@ -176,19 +183,34 @@ filters:
     - "manager"
     - "director"
     - "principal"
+    - "head of"
+    - "chief"
+    - "vp"
+    - "vice president"
+    - "5+ years"
+    - "6+ years"
+    - "7+ years"
+    - "experienced"
   
   # Location filtering (job must match at least ONE if specified)
+  # Major Indian cities only
   locations:
-    - "India"
     - "Bangalore"
+    - "Bengaluru"
     - "Mumbai"
     - "Delhi"
+    - "New Delhi"
     - "Hyderabad"
     - "Pune"
     - "Chennai"
     - "Gurgaon"
+    - "Gurugram"
     - "Noida"
+    - "Kolkata"
+    - "Ahmedabad"
+    - "India"
     - "Remote"
+    - "Work from Home"
   
   # Exclude locations (job must NOT match ANY of these)
   exclude_locations:
@@ -205,12 +227,16 @@ filters:
     # - "full time"
     # - "permanent"
   
-  # Experience level filtering
+  # Experience level filtering (entry-level and fresher jobs only)
   experience_levels:
-    # - "entry level"
-    # - "junior"
-    # - "associate"
-    # - "mid-level"
+    - "entry level"
+    - "junior"
+    - "associate"
+    - "fresher"
+    - "0-1 years"
+    - "0-2 years"
+    - "graduate"
+    - "trainee"
   
   # Remote-only filtering
   remote_only: false                # Set to true to only show remote jobs
