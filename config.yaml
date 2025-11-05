@@ -199,19 +199,21 @@ filters:
     - "10+ years"
   
   # Location filtering (job must match at least ONE if specified)
-  # Major Indian cities only
+  # Major Indian cities only - Delhi NCR prioritized first
   locations:
-    - "Bangalore"
-    - "Bengaluru"
-    - "Mumbai"
     - "Delhi"
     - "New Delhi"
-    - "Hyderabad"
-    - "Pune"
-    - "Chennai"
     - "Gurgaon"
     - "Gurugram"
     - "Noida"
+    - "Delhi NCR"
+    - "NCR"
+    - "Bangalore"
+    - "Bengaluru"
+    - "Mumbai"
+    - "Hyderabad"
+    - "Pune"
+    - "Chennai"
     - "Kolkata"
     - "Ahmedabad"
     - "India"

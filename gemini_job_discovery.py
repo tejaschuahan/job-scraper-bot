@@ -82,30 +82,32 @@ Provide 8-10 best sources.
         """
         try:
             prompt = f"""
-Generate 8-10 DISTINCT and DIFFERENT job search queries for finding "{role}" positions.
+Generate 8-10 DISTINCT and DIFFERENT job search queries for finding "{role}" positions in Delhi NCR, India.
 
-IMPORTANT: Make each query meaningfully different to avoid duplicate results.
+IMPORTANT: 
+- Make each query meaningfully different to avoid duplicate results
+- PRIORITIZE Delhi, Gurgaon, Noida, New Delhi locations in queries
+- Include "Delhi" or "NCR" in 60% of queries
 
 Include:
-- Exact role name (1 query)
-- Most common synonym (1 query)
-- Seniority variations (2-3 queries: junior, associate, entry-level)
-- Related but different roles (2-3 queries)
-- Industry-specific terms (1-2 queries)
+- Exact role name with Delhi/NCR (2-3 queries)
+- Most common synonym with location (1-2 queries)
+- Seniority variations (2-3 queries: junior, associate, entry-level) with Delhi
+- Related but different roles (1-2 queries)
 
 Examples for "data analyst":
-- data analyst
-- business intelligence analyst
-- junior data analyst
-- entry level analyst
-- BI analyst
-- reporting analyst
-- analytics engineer
+- data analyst delhi
+- data analyst gurgaon noida
+- business intelligence analyst ncr
+- junior data analyst delhi
+- entry level analyst delhi ncr
+- BI analyst new delhi
+- reporting analyst gurgaon
 
 Return ONLY a JSON array of strings (8-10 queries max):
 ["query1", "query2", "query3", ...]
 
-No explanations, no duplicates, just distinct queries.
+No explanations, no duplicates, just distinct queries with Delhi NCR focus.
 """
             
             response = self.model.generate_content(prompt)
