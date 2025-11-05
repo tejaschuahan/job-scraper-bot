@@ -83,44 +83,54 @@ sites:
   
   # Indian Job Sites
   naukri:
-    enabled: true
+    enabled: false
     # 🇮🇳 Naukri.com - India's largest job portal
+    # ⚠️ DISABLED: Anti-scraping protection causing failures
     
   foundit:
-    enabled: true
+    enabled: false
     # 🇮🇳 Foundit (Monster India) - Major Indian job site
+    # ⚠️ DISABLED: Anti-scraping protection causing failures
     
   shine:
-    enabled: true
+    enabled: false
     # 🇮🇳 Shine.com - Popular Indian job portal
+    # ⚠️ DISABLED: Anti-scraping protection causing failures
     
   timesjobs:
-    enabled: true
+    enabled: false
     # 🇮🇳 TimesJobs - Part of Times Group
+    # ⚠️ DISABLED: Anti-scraping protection causing failures
     
   instahyre:
-    enabled: true
+    enabled: false
     # 🇮🇳 Instahyre - Tech jobs in India
+    # ⚠️ DISABLED: Anti-scraping protection causing failures
     
   cutshort:
-    enabled: true
+    enabled: false
     # 🇮🇳 Cutshort - Startup & tech jobs
+    # ⚠️ DISABLED: Anti-scraping protection causing failures
     
   hirist:
-    enabled: true
+    enabled: false
     # 🇮🇳 Hirist - IT/Tech jobs in India
+    # ⚠️ DISABLED: Anti-scraping protection causing failures
     
   iimjobs:
-    enabled: true
+    enabled: false
     # 🇮🇳 IIMJobs - Premium management & analytics jobs
+    # ⚠️ DISABLED: Anti-scraping protection causing failures
     
   freshersworld:
-    enabled: true
+    enabled: false
     # 🇮🇳 Freshersworld - Entry-level & fresher jobs
+    # ⚠️ DISABLED: Anti-scraping protection causing failures
     
   linkedin_posts:
-    enabled: true
+    enabled: false
     # 🔍 LinkedIn Posts - Job postings shared in posts/feed (not in jobs section)
+    # ⚠️ DISABLED: Unreliable scraping causing failures
 
 # Scraping Settings
 scraping:
