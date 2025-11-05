@@ -462,6 +462,10 @@ class JobScraper:
         # Get AI summary and score if enabled
         ai_summary = None
         quality_score = None
+        salary_estimate = None
+        company_insights = None
+        competition_info = None
+        
         if self.gemini and gemini_config.get('features', {}).get('job_summarization', False):
             try:
                 ai_summary = self.gemini.summarize_job(job)
@@ -474,6 +478,27 @@ class JobScraper:
                 quality_score = score_data.get('score')
             except Exception as e:
                 logger.warning(f"Failed to score job quality: {e}")
+        
+        # Estimate salary if not provided
+        if self.gemini and not job.get('salary'):
+            try:
+                salary_estimate = self.gemini.estimate_salary(job)
+            except Exception as e:
+                logger.warning(f"Failed to estimate salary: {e}")
+        
+        # Get company insights
+        if self.gemini and gemini_config.get('features', {}).get('company_analysis', True):
+            try:
+                company_insights = self.gemini.analyze_company(job.get('company', ''))
+            except Exception as e:
+                logger.warning(f"Failed to analyze company: {e}")
+        
+        # Estimate competition
+        if self.gemini and gemini_config.get('features', {}).get('competition_analysis', False):
+            try:
+                competition_info = self.gemini.estimate_competition(job)
+            except Exception as e:
+                logger.warning(f"Failed to estimate competition: {e}")
         
         # Escape Markdown special characters to avoid parsing errors
         def escape_markdown(text: str) -> str:
@@ -502,11 +527,26 @@ class JobScraper:
         if format_config.get('show_location', True) and job.get('location'):
             message_parts.append(f"📍 **Location:** {escape_markdown(job['location'])}")
         
-        if format_config.get('show_salary', True) and job.get('salary'):
-            message_parts.append(f"💰 **Salary:** {escape_markdown(job['salary'])}")
+        # Show salary (actual or estimated)
+        if format_config.get('show_salary', True):
+            if job.get('salary'):
+                message_parts.append(f"💰 **Salary:** {escape_markdown(job['salary'])}")
+            elif salary_estimate and salary_estimate.get('salary_min', 0) > 0:
+                salary_range = f"{salary_estimate['salary_min']}-{salary_estimate['salary_max']} LPA"
+                confidence = salary_estimate.get('confidence', 'Medium')
+                message_parts.append(f"💰 **Est\\. Salary:** {escape_markdown(salary_range)} \\({escape_markdown(confidence)} confidence\\)")
         
         if format_config.get('show_job_type', False) and job.get('job_type'):
             message_parts.append(f"📋 **Type:** {escape_markdown(job['job_type'])}")
+        
+        # Show company insights if available
+        if company_insights and company_insights.get('type') != 'Unknown':
+            company_type = company_insights.get('type', '')
+            salary_rep = company_insights.get('salary_reputation', '')
+            if company_type:
+                message_parts.append(f"🏢 **Company:** {escape_markdown(company_type)}")
+            if salary_rep and salary_rep != 'Unknown':
+                message_parts.append(f"💼 **Pay Reputation:** {escape_markdown(salary_rep)}")
         
         if format_config.get('show_site', True):
             message_parts.append(f"**Site:** {escape_markdown(job['site'])}")
@@ -528,6 +568,15 @@ class JobScraper:
         if quality_score:
             score_text = f"Quality Score: {quality_score}/10"
             message_parts.append(f"\n📊 {escape_markdown(score_text)}")
+        
+        # Add competition info if available
+        if competition_info and competition_info.get('competition'):
+            comp_level = competition_info.get('competition', 'Medium')
+            applicants = competition_info.get('estimated_applicants', '')
+            if comp_level != 'Medium':  # Only show if not default
+                message_parts.append(f"👥 **Competition:** {escape_markdown(comp_level)}")
+            if competition_info.get('quick_apply_advantage'):
+                message_parts.append(f"⚡ **Tip:** Apply quickly for better visibility\\!")
         
         # URL doesn't need escaping in link format
         message_parts.append(f"\n🔗 [Apply Here]({job['url']})")

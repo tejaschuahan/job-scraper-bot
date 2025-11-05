@@ -264,6 +264,279 @@ Return as JSON array:
                 "Describe a challenging project you've worked on.",
                 "Where do you see yourself in 5 years?"
             ]
+    
+    def estimate_salary(self, job: Dict) -> Dict:
+        """
+        Estimate salary range based on job title, company, and location
+        
+        Args:
+            job: Job dictionary with title, company, location
+        
+        Returns:
+            Dict with salary_min, salary_max, currency, confidence, reasoning
+        """
+        try:
+            prompt = f"""
+Based on Indian job market data, estimate the salary range for this position:
+
+Job Title: {job.get('title', 'N/A')}
+Company: {job.get('company', 'N/A')}
+Location: {job.get('location', 'India')}
+Description snippet: {job.get('description', '')[:300]}
+
+Consider:
+- Job title and seniority level
+- Company (if known/recognizable)
+- Location (metro vs tier-2 city)
+- Industry standards in India
+- Experience level implied
+
+Return as JSON:
+{{
+  "salary_min": <number in LPA>,
+  "salary_max": <number in LPA>,
+  "currency": "INR",
+  "confidence": "High/Medium/Low",
+  "reasoning": "<one sentence why this estimate>"
+}}
+
+If entry-level/fresher role, estimate 3-8 LPA.
+If mid-level, estimate 8-20 LPA.
+If senior, estimate 20-40+ LPA.
+"""
+            
+            response = self.model.generate_content(prompt)
+            result = json.loads(response.text.strip())
+            return {
+                'salary_min': result.get('salary_min', 0),
+                'salary_max': result.get('salary_max', 0),
+                'currency': result.get('currency', 'INR'),
+                'confidence': result.get('confidence', 'Medium'),
+                'reasoning': result.get('reasoning', 'Market estimate')
+            }
+            
+        except Exception as e:
+            logger.error(f"Error estimating salary: {e}")
+            return {
+                'salary_min': 0,
+                'salary_max': 0,
+                'currency': 'INR',
+                'confidence': 'Low',
+                'reasoning': 'Unable to estimate'
+            }
+    
+    def analyze_company(self, company_name: str) -> Dict:
+        """
+        Get insights about a company
+        
+        Args:
+            company_name: Name of the company
+        
+        Returns:
+            Dict with company insights
+        """
+        try:
+            prompt = f"""
+Provide brief insights about this company for a job seeker:
+
+Company: {company_name}
+
+Include (if known):
+1. Company type (Startup/MNC/Product/Service)
+2. Industry/Domain
+3. Company size (Small/Medium/Large)
+4. Known for (products/culture/reputation)
+5. Average salary reputation (Competitive/Average/Below-average)
+6. Work-life balance reputation (Good/Average/Poor)
+7. Growth opportunities (Excellent/Good/Limited)
+
+Return as JSON:
+{{
+  "type": "Startup/MNC/Product/Service/Unknown",
+  "industry": "Industry name",
+  "size": "Small/Medium/Large/Unknown",
+  "known_for": "Brief description",
+  "salary_reputation": "Competitive/Average/Below-average/Unknown",
+  "work_life_balance": "Good/Average/Poor/Unknown",
+  "growth_opportunities": "Excellent/Good/Limited/Unknown",
+  "recommendation": "2-3 sentence advice for job seeker"
+}}
+
+If company is unknown, mark fields as "Unknown" and be honest about it.
+"""
+            
+            response = self.model.generate_content(prompt)
+            result = json.loads(response.text.strip())
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error analyzing company: {e}")
+            return {
+                'type': 'Unknown',
+                'industry': 'Unknown',
+                'size': 'Unknown',
+                'known_for': 'No information available',
+                'salary_reputation': 'Unknown',
+                'work_life_balance': 'Unknown',
+                'growth_opportunities': 'Unknown',
+                'recommendation': 'Research this company before applying.'
+            }
+    
+    def predict_application_success(self, job: Dict, user_profile: Dict) -> Dict:
+        """
+        Predict likelihood of getting this job based on user profile
+        
+        Args:
+            job: Job dictionary
+            user_profile: User's skills, experience, etc.
+        
+        Returns:
+            Dict with success_rate, strengths, gaps, tips
+        """
+        try:
+            prompt = f"""
+Assess the match between this job and candidate:
+
+Job: {job.get('title', 'N/A')} at {job.get('company', 'N/A')}
+Requirements: {job.get('description', 'N/A')[:500]}
+
+Candidate:
+- Experience: {user_profile.get('experience', 'Entry-level')}
+- Skills: {', '.join(user_profile.get('skills', []))}
+- Education: {user_profile.get('education', 'Bachelor\'s degree')}
+
+Provide:
+1. Match percentage (0-100)
+2. Key strengths (what they have)
+3. Skill gaps (what they're missing)
+4. Application tips
+
+Return as JSON:
+{{
+  "match_percentage": <0-100>,
+  "strengths": ["strength1", "strength2"],
+  "gaps": ["gap1", "gap2"],
+  "tips": ["tip1", "tip2"],
+  "should_apply": true/false,
+  "reasoning": "One sentence why"
+}}
+"""
+            
+            response = self.model.generate_content(prompt)
+            result = json.loads(response.text.strip())
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error predicting success: {e}")
+            return {
+                'match_percentage': 50,
+                'strengths': [],
+                'gaps': [],
+                'tips': ['Review job requirements carefully'],
+                'should_apply': True,
+                'reasoning': 'Unable to assess match'
+            }
+    
+    def extract_hidden_requirements(self, job: Dict) -> Dict:
+        """
+        Extract unstated requirements from job description
+        
+        Args:
+            job: Job dictionary
+        
+        Returns:
+            Dict with explicit and implicit requirements
+        """
+        try:
+            prompt = f"""
+Analyze this job posting and identify both stated and UNSTATED requirements:
+
+Job: {job.get('title', 'N/A')}
+Description: {job.get('description', 'N/A')[:800]}
+
+Extract:
+1. Explicit requirements (clearly stated)
+2. Implicit requirements (reading between the lines)
+3. Nice-to-have skills
+4. Cultural fit expectations
+5. Red flags or unrealistic expectations
+
+Return as JSON:
+{{
+  "explicit_skills": ["skill1", "skill2"],
+  "implicit_skills": ["skill1", "skill2"],
+  "nice_to_have": ["skill1", "skill2"],
+  "cultural_fit": "Description of expected culture fit",
+  "red_flags": ["flag1", "flag2"] or [],
+  "realistic": true/false,
+  "advice": "One sentence advice"
+}}
+"""
+            
+            response = self.model.generate_content(prompt)
+            result = json.loads(response.text.strip())
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error extracting requirements: {e}")
+            return {
+                'explicit_skills': [],
+                'implicit_skills': [],
+                'nice_to_have': [],
+                'cultural_fit': 'Unknown',
+                'red_flags': [],
+                'realistic': True,
+                'advice': 'Read the job description carefully'
+            }
+    
+    def estimate_competition(self, job: Dict) -> Dict:
+        """
+        Estimate competition level for a job
+        
+        Args:
+            job: Job dictionary
+        
+        Returns:
+            Dict with competition analysis
+        """
+        try:
+            prompt = f"""
+Estimate the competition level for this job in India:
+
+Job: {job.get('title', 'N/A')}
+Company: {job.get('company', 'N/A')}
+Location: {job.get('location', 'N/A')}
+
+Consider:
+- Job popularity (how many people want this role)
+- Location attractiveness
+- Company reputation
+- Experience level required
+- Skill specificity
+
+Return as JSON:
+{{
+  "competition": "Very High/High/Medium/Low",
+  "estimated_applicants": "100-500/50-100/10-50/<10",
+  "quick_apply_advantage": true/false,
+  "best_time": "Morning/Evening/Weekend",
+  "advice": "One sentence strategy tip"
+}}
+"""
+            
+            response = self.model.generate_content(prompt)
+            result = json.loads(response.text.strip())
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error estimating competition: {e}")
+            return {
+                'competition': 'Medium',
+                'estimated_applicants': '50-100',
+                'quick_apply_advantage': True,
+                'best_time': 'Morning',
+                'advice': 'Apply quickly for better visibility'
+            }
 
 
 # Singleton instance

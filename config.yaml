@@ -7,9 +7,12 @@ gemini:
   api_key: "${GEMINI_API_KEY}"        # Get free API key from https://makersuite.google.com/app/apikey
   enabled: true                       # Enable AI-powered features
   features:
-    job_summarization: true           # Smart job summaries
+    job_summarization: true           # Smart job summaries with AI
     natural_language_search: true     # Parse natural language queries
-    job_quality_scoring: true         # Score job posting quality
+    job_quality_scoring: true         # Score job posting quality (0-10)
+    salary_estimation: true           # Estimate salary when not provided (NEW!)
+    company_analysis: true            # Company insights & reputation (NEW!)
+    competition_analysis: true        # Estimate application competition (NEW!)
     job_comparison: false             # Compare multiple jobs (more API calls)
     cover_letter_generation: false    # Generate cover letters (more API calls)
     interview_questions: false        # Generate interview questions (more API calls)

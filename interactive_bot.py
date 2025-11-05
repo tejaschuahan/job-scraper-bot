@@ -610,6 +610,64 @@ class InteractiveJobBot:
                 parse_mode='Markdown'
             )
     
+    async def analyze_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Analyze a job URL or company using AI"""
+        if not self.gemini:
+            await update.message.reply_text(
+                "⚠️ Job analysis requires Gemini AI.",
+                parse_mode='Markdown'
+            )
+            return
+        
+        query = ' '.join(context.args) if context.args else None
+        
+        if not query:
+            await update.message.reply_text(
+                "🔬 **Deep Job Analysis**\n\n"
+                "Get comprehensive insights about a company!\n\n"
+                "**Usage:** `/analyze <company name>`\n\n"
+                "**Examples:**\n"
+                "• `/analyze Google`\n"
+                "• `/analyze Accenture`\n"
+                "• `/analyze TCS`",
+                parse_mode='Markdown'
+            )
+            return
+        
+        await update.message.reply_text(
+            f"🔬 Analyzing **{query}**...",
+            parse_mode='Markdown'
+        )
+        
+        try:
+            # Analyze company
+            insights = self.gemini.analyze_company(query)
+            
+            if insights:
+                message = f"🔬 **Company Analysis: {query}**\n\n"
+                message += f"🏢 **Type:** {insights.get('type', 'Unknown')}\n"
+                message += f"🏭 **Industry:** {insights.get('industry', 'Unknown')}\n"
+                message += f"📊 **Size:** {insights.get('size', 'Unknown')}\n"
+                message += f"⭐ **Known For:** {insights.get('known_for', 'N/A')}\n"
+                message += f"💰 **Salary Rep:** {insights.get('salary_reputation', 'Unknown')}\n"
+                message += f"⚖️ **Work-Life:** {insights.get('work_life_balance', 'Unknown')}\n"
+                message += f"📈 **Growth:** {insights.get('growth_opportunities', 'Unknown')}\n\n"
+                message += f"💡 **Recommendation:**\n{insights.get('recommendation', 'Research before applying.')}"
+                
+                await update.message.reply_text(message, parse_mode='Markdown')
+            else:
+                await update.message.reply_text(
+                    "❌ Could not analyze. Try again later.",
+                    parse_mode='Markdown'
+                )
+                
+        except Exception as e:
+            logger.error(f"Error in analyze command: {e}")
+            await update.message.reply_text(
+                "❌ Error analyzing. Please try again.",
+                parse_mode='Markdown'
+            )
+    
     async def strategy_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Get personalized job search strategy"""
         if not self.job_discovery:
@@ -681,6 +739,7 @@ class InteractiveJobBot:
                 "/discover <role> - Find job boards & sources 🔍\n"
                 "/market <role> - Market analysis & insights 📊\n"
                 "/strategy <role> - Personalized search strategy 🎯\n"
+                "/analyze <company> - Company analysis & insights 🔬\n"
             )
         
         await update.message.reply_text(
@@ -729,6 +788,7 @@ class InteractiveJobBot:
         application.add_handler(CommandHandler('discover', self.discover_command))
         application.add_handler(CommandHandler('market', self.market_command))
         application.add_handler(CommandHandler('strategy', self.strategy_command))
+        application.add_handler(CommandHandler('analyze', self.analyze_command))
         application.add_handler(CommandHandler('stop', self.stop_command))
         application.add_handler(CommandHandler('status', self.status_command))
         application.add_handler(CommandHandler('help', self.help_command))
