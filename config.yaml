@@ -82,16 +82,19 @@ sites:
     # Best for remote tech jobs - Very reliable
     
   glassdoor:
-    enabled: false
-    # ⚠️ BLOCKED: Timing out even with stealth mode
+    enabled: true
+    # ✅ ENABLED: Using stealth mode for scraping
+    # Gemini enhances search queries for better results
     
   google_jobs:
-    enabled: false
-    # ⚠️ BLOCKED: Timing out even with stealth mode
+    enabled: true
+    # ✅ ENABLED: Using stealth mode for scraping
+    # Gemini generates optimized search queries
     
   indeed:
-    enabled: false
-    # ⚠️ BLOCKED: Timing out even with stealth mode
+    enabled: true
+    # ✅ ENABLED: Using stealth mode for scraping  
+    # Gemini enhances search coverage
   
   # Indian Job Sites
   naukri:
