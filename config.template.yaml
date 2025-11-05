@@ -1,0 +1,138 @@
+# ==========================================
+# Job Scraper Bot Configuration Template
+# ==========================================
+
+# Telegram Settings
+telegram:
+  bot_token: "${TELEGRAM_BOT_TOKEN}"  # Set in Railway environment variables
+  chat_id: "${TELEGRAM_CHAT_ID}"      # Set in Railway environment variables
+  
+  # Notification format customization
+  notification_format:
+    show_title: true
+    show_company: true
+    show_location: true
+    show_salary: true
+    show_job_type: true
+    show_site: true
+    show_description: false         # Set to true to include job description snippet
+    disable_preview: false          # Set to true to disable link previews
+
+# Search Configuration
+search:
+  location: "India"                 # Primary location for job search
+  
+  # Additional location filters (optional)
+  cities:
+    - "Bangalore"
+    - "Mumbai"
+    - "Delhi"
+    - "Hyderabad"
+    - "Pune"
+    - "Chennai"
+    - "Kolkata"
+    - "Gurgaon"
+  
+  # Job search queries - roles to search for
+  queries:
+    - "data analyst"
+    - "data scientist"
+    - "data engineer"
+    - "business analyst"
+    - "business intelligence analyst"
+    - "analytics engineer"
+    - "machine learning engineer"
+    - "ml engineer"
+    - "ai engineer"
+    - "data analytics"
+    - "big data engineer"
+    - "etl developer"
+    - "data architect"
+    - "analytics consultant"
+    - "quantitative analyst"
+    - "research analyst"
+    - "insight analyst"
+    - "reporting analyst"
+    - "sql developer"
+    - "database analyst"
+    - "python developer data"
+    - "power bi developer"
+
+# Keyword Filtering
+filters:
+  # Jobs with these keywords will be INCLUDED (if list is not empty)
+  include_keywords:
+    - "python"
+    - "sql"
+    - "tableau"
+    - "power bi"
+    - "analytics"
+    - "data"
+    - "excel"
+    - "statistics"
+    - "pandas"
+    - "numpy"
+    - "visualization"
+    - "reporting"
+    - "dashboard"
+    - "etl"
+    - "aws"
+    - "azure"
+    - "machine learning"
+    - "analysis"
+  
+  # Jobs with these keywords will be EXCLUDED
+  exclude_keywords:
+    - "senior"
+    - "lead"
+    - "manager"
+    - "director"
+    - "principal"
+    # Add more exclusion keywords as needed
+
+# Job Sites Configuration
+sites:
+  linkedin:
+    enabled: true
+    
+  remotive:
+    enabled: true
+    # ✅ WORKING: API-based, no scraping issues
+    
+  linkedin_posts:
+    enabled: true
+    # 🔍 LinkedIn Posts - Job postings shared in posts/feed (not in jobs section)
+
+# Scraping Settings
+scraping:
+  interval: 21600                   # Seconds between scraping cycles (21600 = 6 hours)
+  
+  # Stealth Mode - Bypass Anti-Bot Protection (Requires: playwright install)
+  use_stealth_mode: true            # Use real browser automation for blocked sites
+  stealth_headless: true            # Run browser in headless mode (false = visible browser)
+  
+  min_delay: 1.0                    # Minimum delay between requests (seconds)
+  max_delay: 3.0                    # Maximum delay between requests (seconds)
+  max_retries: 3                    # Maximum retry attempts for failed requests
+  retry_delay: 5                    # Base delay for exponential backoff (seconds)
+  
+  # Connection pooling for better performance
+  connection_pool_size: 10          # Max concurrent connections
+  
+  # Proxy settings (optional - leave empty if not using proxies)
+  proxies: []
+  # Example:
+  # - "http://proxy1.example.com:8080"
+  # - "http://proxy2.example.com:8080"
+
+# Database Settings
+database:
+  path: "jobs.db"                   # SQLite database file path
+  retention_days: 30                # Keep job records for X days
+
+# Monitoring & Alerts
+monitoring:
+  enable_notifications: true        # Send Telegram notifications
+  max_consecutive_failures: 5       # Alert after X consecutive failures
+  stats_interval_hours: 24          # Send statistics summary every X hours
+  health_check_interval_minutes: 30 # Perform health check every X minutes

@@ -5,6 +5,7 @@ Asks user for job role and automatically scrapes related positions
 
 import asyncio
 import logging
+import os
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import (
     Application,
@@ -276,6 +277,12 @@ class InteractiveJobBot:
             # Load configuration
             with open('config.yaml', 'r', encoding='utf-8') as f:
                 config = yaml.safe_load(f)
+            
+            # Override with environment variables if available
+            if os.getenv('TELEGRAM_BOT_TOKEN'):
+                config['telegram']['bot_token'] = os.getenv('TELEGRAM_BOT_TOKEN')
+            if os.getenv('TELEGRAM_CHAT_ID'):
+                config['telegram']['chat_id'] = os.getenv('TELEGRAM_CHAT_ID')
             
             # Override telegram config to send to this specific user
             config['telegram']['chat_id'] = str(user_id)

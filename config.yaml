@@ -4,8 +4,8 @@
 
 # Telegram Settings
 telegram:
-  bot_token: "8575752221:AAFHbL25N54TlwIJ1PHodzPED2rA_jaM3hA"  # Get from @BotFather on Telegram
-  chat_id: "1463818772"      # Your Telegram chat ID (use @userinfobot to get it)
+  bot_token: "${TELEGRAM_BOT_TOKEN}"  # Get from @BotFather on Telegram
+  chat_id: "${TELEGRAM_CHAT_ID}"      # Your Telegram chat ID (use @userinfobot to get it)
   
   # Notification format customization
   notification_format:

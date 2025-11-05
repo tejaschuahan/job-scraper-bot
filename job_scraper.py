@@ -16,6 +16,7 @@ from urllib.parse import urlencode, quote_plus
 import yaml
 from pathlib import Path
 import json
+import os
 
 # Import stealth scrapers
 try:
@@ -261,6 +262,12 @@ class StatsTracker:
 class JobScraper:
     def __init__(self, config: Dict):
         self.config = config
+        # Override with environment variables if available
+        if os.getenv('TELEGRAM_BOT_TOKEN'):
+            config['telegram']['bot_token'] = os.getenv('TELEGRAM_BOT_TOKEN')
+        if os.getenv('TELEGRAM_CHAT_ID'):
+            config['telegram']['chat_id'] = os.getenv('TELEGRAM_CHAT_ID')
+        
         self.telegram_token = config['telegram']['bot_token']
         self.chat_id = config['telegram']['chat_id']
         self.bot = Bot(token=self.telegram_token)
