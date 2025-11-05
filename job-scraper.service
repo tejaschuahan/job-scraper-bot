@@ -1,0 +1,34 @@
+[Unit]
+Description=Job Scraper Bot Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=YOUR_USERNAME
+Group=YOUR_USERNAME
+WorkingDirectory=/home/YOUR_USERNAME/job-scraper
+ExecStart=/usr/bin/python3 /home/YOUR_USERNAME/job-scraper/job_scraper.py
+
+# Restart policy
+Restart=always
+RestartSec=10
+StartLimitInterval=200
+StartLimitBurst=5
+
+# Environment
+Environment="PYTHONUNBUFFERED=1"
+
+# Logging
+StandardOutput=append:/var/log/job-scraper/output.log
+StandardError=append:/var/log/job-scraper/error.log
+
+# Security hardening (optional)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/YOUR_USERNAME/job-scraper
+
+[Install]
+WantedBy=multi-user.target
