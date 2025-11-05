@@ -2,6 +2,18 @@
 # Job Scraper Bot Configuration Template
 # ==========================================
 
+# Gemini AI Settings (Optional)
+gemini:
+  api_key: "${GEMINI_API_KEY}"        # Set in Railway environment variables - Get free key at https://makersuite.google.com/app/apikey
+  enabled: true                       # Enable AI-powered features
+  features:
+    job_summarization: true           # Smart job summaries with AI
+    natural_language_search: true     # Parse natural language queries
+    job_quality_scoring: true         # Score job posting quality (0-10)
+    job_comparison: false             # Compare multiple jobs (uses more API calls)
+    cover_letter_generation: false    # Generate cover letters (uses more API calls)
+    interview_questions: false        # Generate interview questions (uses more API calls)
+
 # Telegram Settings
 telegram:
   bot_token: "${TELEGRAM_BOT_TOKEN}"  # Set in Railway environment variables

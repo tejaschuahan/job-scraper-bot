@@ -281,6 +281,18 @@ class JobScraper:
         self.job_filter = JobFilter(config.get('filters', {}))
         self.stats = StatsTracker()
         
+        # Initialize Gemini AI (optional)
+        self.gemini = None
+        gemini_config = config.get('gemini', {})
+        if gemini_config.get('enabled', False):
+            try:
+                from gemini_ai import get_gemini_ai
+                self.gemini = get_gemini_ai()
+                if self.gemini:
+                    logger.info("✨ Gemini AI features enabled")
+            except Exception as e:
+                logger.warning(f"⚠️ Could not initialize Gemini AI: {e}")
+        
         # Anti-scraping settings
         self.min_delay = config.get('scraping', {}).get('min_delay', 1)
         self.max_delay = config.get('scraping', {}).get('max_delay', 3)
@@ -440,6 +452,23 @@ class JobScraper:
         """Send job notification to Telegram"""
         # Get notification format from config
         format_config = self.config.get('telegram', {}).get('notification_format', {})
+        gemini_config = self.config.get('gemini', {})
+        
+        # Get AI summary and score if enabled
+        ai_summary = None
+        quality_score = None
+        if self.gemini and gemini_config.get('features', {}).get('job_summarization', False):
+            try:
+                ai_summary = self.gemini.summarize_job(job)
+            except Exception as e:
+                logger.warning(f"Failed to generate AI summary: {e}")
+        
+        if self.gemini and gemini_config.get('features', {}).get('job_quality_scoring', False):
+            try:
+                score_data = self.gemini.score_job_quality(job)
+                quality_score = score_data.get('score')
+            except Exception as e:
+                logger.warning(f"Failed to score job quality: {e}")
         
         # Escape Markdown special characters to avoid parsing errors
         def escape_markdown(text: str) -> str:
@@ -450,7 +479,14 @@ class JobScraper:
             return text
         
         # Build message based on config
-        message_parts = [f"🔔 **New Job Alert\\!**\n"]
+        quality_emoji = ""
+        if quality_score:
+            if quality_score >= 8:
+                quality_emoji = " 🌟"
+            elif quality_score >= 6:
+                quality_emoji = " ⭐"
+        
+        message_parts = [f"🔔 **New Job Alert\\!**{quality_emoji}\n"]
         
         if format_config.get('show_title', True):
             message_parts.append(f"**Title:** {escape_markdown(job['title'])}")
@@ -470,11 +506,23 @@ class JobScraper:
         if format_config.get('show_site', True):
             message_parts.append(f"**Site:** {escape_markdown(job['site'])}")
         
-        if format_config.get('show_description', False) and job.get('description'):
-            # Truncate and clean description
+        # Add AI-generated summary if available
+        if ai_summary:
+            message_parts.append(f"\n✨ **AI Summary:**")
+            # Escape the AI summary
+            for line in ai_summary.split('\n'):
+                if line.strip():
+                    message_parts.append(escape_markdown(line))
+        elif format_config.get('show_description', False) and job.get('description'):
+            # Fallback to regular description if no AI summary
             desc = job['description'][:200] + "..." if len(job['description']) > 200 else job['description']
             desc = escape_markdown(desc)
             message_parts.append(f"\n{desc}")
+        
+        # Add quality score if available
+        if quality_score:
+            score_text = f"Quality Score: {quality_score}/10"
+            message_parts.append(f"\n📊 {escape_markdown(score_text)}")
         
         # URL doesn't need escaping in link format
         message_parts.append(f"\n🔗 [Apply Here]({job['url']})")

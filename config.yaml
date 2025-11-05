@@ -2,6 +2,18 @@
 # Job Scraper Bot Configuration
 # ==========================================
 
+# Gemini AI Settings (Optional - for smart features)
+gemini:
+  api_key: "${GEMINI_API_KEY}"        # Get free API key from https://makersuite.google.com/app/apikey
+  enabled: true                       # Enable AI-powered features
+  features:
+    job_summarization: true           # Smart job summaries
+    natural_language_search: true     # Parse natural language queries
+    job_quality_scoring: true         # Score job posting quality
+    job_comparison: false             # Compare multiple jobs (more API calls)
+    cover_letter_generation: false    # Generate cover letters (more API calls)
+    interview_questions: false        # Generate interview questions (more API calls)
+
 # Telegram Settings
 telegram:
   bot_token: "${TELEGRAM_BOT_TOKEN}"  # Get from @BotFather on Telegram

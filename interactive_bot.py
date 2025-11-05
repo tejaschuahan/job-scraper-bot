@@ -144,6 +144,16 @@ class InteractiveJobBot:
         
         self.scraper = None
         self.active_searches = {}  # Store active search tasks per user
+        
+        # Initialize Gemini AI if enabled
+        self.gemini = None
+        gemini_config = self.config.get('gemini', {})
+        if gemini_config.get('enabled', False):
+            try:
+                from gemini_ai import get_gemini_ai
+                self.gemini = get_gemini_ai()
+            except Exception as e:
+                logger.warning(f"⚠️ Could not initialize Gemini AI: {e}")
     
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Start command - welcome message"""
@@ -426,24 +436,91 @@ class InteractiveJobBot:
         )
         return ConversationHandler.END
     
+    async def find_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Natural language job search using Gemini AI"""
+        if not self.gemini:
+            await update.message.reply_text(
+                "⚠️ AI search is not available. Use /search for regular job search.",
+                parse_mode='Markdown'
+            )
+            return
+        
+        # Get search query from command
+        query = ' '.join(context.args) if context.args else None
+        
+        if not query:
+            await update.message.reply_text(
+                "🤖 **AI-Powered Job Search**\n\n"
+                "Just tell me what you're looking for in plain English!\n\n"
+                "**Examples:**\n"
+                "• `/find python jobs in bangalore for freshers`\n"
+                "• `/find remote data analyst positions`\n"
+                "• `/find entry level business analyst in mumbai`\n"
+                "• `/find junior developer roles under 5 LPA`\n\n"
+                "I'll understand your request and start searching! ✨",
+                parse_mode='Markdown'
+            )
+            return
+        
+        await update.message.reply_text(
+            "🔍 Analyzing your request...",
+            parse_mode='Markdown'
+        )
+        
+        try:
+            # Parse natural language query using Gemini
+            parsed = self.gemini.parse_natural_search(query)
+            
+            # Build response
+            role = parsed.get('role', 'various positions')
+            location = parsed.get('location', 'India')
+            exp_level = parsed.get('experience_level', 'any level')
+            
+            await update.message.reply_text(
+                f"✅ **Understood!**\n\n"
+                f"**Role:** {role}\n"
+                f"**Location:** {location}\n"
+                f"**Experience:** {exp_level}\n\n"
+                f"Starting your job search now! 🚀\n"
+                f"You'll receive notifications for matching jobs.",
+                parse_mode='Markdown'
+            )
+            
+            # Start search with parsed parameters
+            user_id = update.effective_user.id
+            queries = [role] + parsed.get('keywords', [])
+            await self.run_continuous_scraping(user_id, queries, update.get_bot())
+            
+        except Exception as e:
+            logger.error(f"Error in natural language search: {e}")
+            await update.message.reply_text(
+                "❌ Sorry, I couldn't understand that. Try /search for a guided search.",
+                parse_mode='Markdown'
+            )
+    
     async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Show help message"""
+        ai_commands = ""
+        if self.gemini:
+            ai_commands = "/find <query> - AI-powered natural language search ✨\n"
+        
         await update.message.reply_text(
             "🤖 **Job Scraper Bot - Help**\n\n"
             "**Commands:**\n"
             "/start - Welcome message\n"
-            "/search - Start a new job search\n"
+            "/search - Start a guided job search\n"
+            f"{ai_commands}"
             "/stop - Stop your active search\n"
             "/status - Check your current search status\n"
             "/help - Show this help message\n\n"
             "**How it works:**\n"
-            "1️⃣ Use /search and tell me what job you want\n"
+            "1️⃣ Use /search (guided) or /find (natural language)\n"
             "2️⃣ I'll automatically search related roles\n"
-            "3️⃣ You'll get notifications for new jobs every 5 minutes\n"
+            "3️⃣ You'll get notifications for new jobs every 6 hours\n"
             "4️⃣ Use /stop when you want to stop\n\n"
             "**Supported Sites:**\n"
-            "LinkedIn, TimesJobs, Remotive, Naukri, Foundit, Shine, and more!\n\n"
-            "**Location:** India (all major cities)",
+            "LinkedIn, Remotive\n\n"
+            "**Location:** Major Indian cities + Remote",
             parse_mode='Markdown'
         )
     
@@ -467,6 +544,7 @@ class InteractiveJobBot:
         # Add handlers
         application.add_handler(CommandHandler('start', self.start))
         application.add_handler(conv_handler)
+        application.add_handler(CommandHandler('find', self.find_command))
         application.add_handler(CommandHandler('stop', self.stop_command))
         application.add_handler(CommandHandler('status', self.status_command))
         application.add_handler(CommandHandler('help', self.help_command))
