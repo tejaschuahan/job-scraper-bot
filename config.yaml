@@ -25,36 +25,35 @@ database:
 # Search Settings
 search:
   queries:
-    # Entry-Level Data & Analytics Roles
-    - "junior data analyst"
-    - "entry level data analyst"
-    - "fresher data analyst"
-    - "junior business analyst"
-    - "entry level business analyst"
-    - "associate data analyst"
-    - "trainee data analyst"
-    
-    # Fresher/Graduate Positions
-    - "data analyst fresher"
-    - "business analyst fresher"
-    - "graduate data analyst"
-    - "graduate business analyst"
-    - "fresher analyst"
-    - "entry level analyst"
-    
-    # Junior Tech Roles
-    - "junior data scientist"
-    - "junior data engineer"
-    - "junior BI analyst"
-    - "associate analyst"
-    - "analyst trainee"
-    
-    # Generic searches (filtered by experience_levels)
+    # Core Data & Analytics Roles (broad searches)
     - "data analyst"
     - "business analyst"
     - "data scientist"
     - "business intelligence analyst"
     - "BI analyst"
+    - "analytics engineer"
+    - "data engineer"
+    
+    # Entry-Level Specific
+    - "junior data analyst"
+    - "entry level data analyst"
+    - "fresher data analyst"
+    - "junior business analyst"
+    - "associate analyst"
+    - "graduate analyst"
+    
+    # Specialized Analytics
+    - "financial analyst"
+    - "operations analyst"
+    - "product analyst"
+    - "marketing analyst"
+    - "research analyst"
+    - "reporting analyst"
+    
+    # Data Visualization & Tools
+    - "tableau analyst"
+    - "power bi analyst"
+    - "sql analyst"
     
   default_location: "Bangalore, India"  # Default location for job searches
 
@@ -151,34 +150,14 @@ scraping:
 filters:
   # Include keywords (job must match at least ONE of these)
   # Searches in title, description, and company name
-  include_keywords:
-    - "analyst"
-    - "data"
-    - "analytics"
-    - "business intelligence"
-    - "BI"
-    - "insights"
-    - "reporting"
-    - "engineer"
-    - "scientist"
-    - "research"
-    - "fresher"
-    - "entry level"
-    - "junior"
-    - "associate"
-    - "graduate"
-    - "trainee"
-    - "0-1 year"
-    - "0-2 years"
-    - "sql"
-    - "python"
-    - "excel"
-    - "tableau"
-    - "power bi"
+  # Empty list = accept all jobs (only exclude filters apply)
+  include_keywords: []
   
   # Exclude keywords (job must NOT match ANY of these)
   exclude_keywords:
     - "senior"
+    - "sr."
+    - "sr "
     - "lead"
     - "manager"
     - "director"
@@ -187,10 +166,9 @@ filters:
     - "chief"
     - "vp"
     - "vice president"
-    - "5+ years"
-    - "6+ years"
-    - "7+ years"
-    - "experienced"
+    - "8+ years"
+    - "9+ years"
+    - "10+ years"
   
   # Location filtering (job must match at least ONE if specified)
   # Major Indian cities only
@@ -227,16 +205,19 @@ filters:
     # - "full time"
     # - "permanent"
   
-  # Experience level filtering (entry-level and fresher jobs only)
-  experience_levels:
-    - "entry level"
-    - "junior"
-    - "associate"
-    - "fresher"
-    - "0-1 years"
-    - "0-2 years"
-    - "graduate"
-    - "trainee"
+  # Experience level filtering (disabled to get more results)
+  # Rely on exclude_keywords to filter out senior positions instead
+  experience_levels: []
+    # - "entry level"
+    # - "junior"
+    # - "associate"
+    # - "fresher"
+    # - "0-1 years"
+    # - "0-2 years"
+    # - "0-3 years"
+    # - "0-4 years"
+    # - "graduate"
+    # - "trainee"
   
   # Remote-only filtering
   remote_only: false                # Set to true to only show remote jobs
