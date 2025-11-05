@@ -123,7 +123,7 @@ sites:
 
 # Scraping Settings
 scraping:
-  interval: 300                     # Seconds between scraping cycles (300 = 5 minutes)
+  interval: 21600                   # Seconds between scraping cycles (21600 = 6 hours)
   
   # Stealth Mode - Bypass Anti-Bot Protection (Requires: playwright install)
   use_stealth_mode: true            # Use real browser automation for blocked sites
