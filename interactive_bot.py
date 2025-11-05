@@ -132,6 +132,16 @@ class InteractiveJobBot:
         with open(config_path, 'r', encoding='utf-8') as f:
             self.config = yaml.safe_load(f)
         
+        # Override with environment variables if available or if placeholder is used
+        bot_token = self.config['telegram']['bot_token']
+        chat_id = self.config['telegram']['chat_id']
+        
+        # Check if values are placeholders or need env var override
+        if bot_token.startswith('${') or os.getenv('TELEGRAM_BOT_TOKEN'):
+            self.config['telegram']['bot_token'] = os.getenv('TELEGRAM_BOT_TOKEN', bot_token)
+        if chat_id.startswith('${') or os.getenv('TELEGRAM_CHAT_ID'):
+            self.config['telegram']['chat_id'] = os.getenv('TELEGRAM_CHAT_ID', chat_id)
+        
         self.scraper = None
         self.active_searches = {}  # Store active search tasks per user
     
