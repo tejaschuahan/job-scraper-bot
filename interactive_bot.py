@@ -278,11 +278,15 @@ class InteractiveJobBot:
             with open('config.yaml', 'r', encoding='utf-8') as f:
                 config = yaml.safe_load(f)
             
-            # Override with environment variables if available
-            if os.getenv('TELEGRAM_BOT_TOKEN'):
-                config['telegram']['bot_token'] = os.getenv('TELEGRAM_BOT_TOKEN')
-            if os.getenv('TELEGRAM_CHAT_ID'):
-                config['telegram']['chat_id'] = os.getenv('TELEGRAM_CHAT_ID')
+            # Override with environment variables if available or if placeholder is used
+            bot_token = config['telegram']['bot_token']
+            chat_id = config['telegram']['chat_id']
+            
+            # Check if values are placeholders or need env var override
+            if bot_token.startswith('${') or os.getenv('TELEGRAM_BOT_TOKEN'):
+                config['telegram']['bot_token'] = os.getenv('TELEGRAM_BOT_TOKEN', bot_token)
+            if chat_id.startswith('${') or os.getenv('TELEGRAM_CHAT_ID'):
+                config['telegram']['chat_id'] = os.getenv('TELEGRAM_CHAT_ID', chat_id)
             
             # Override telegram config to send to this specific user
             config['telegram']['chat_id'] = str(user_id)
