@@ -99,6 +99,12 @@ sites:
     # ✅ ENABLED: Using stealth mode for scraping  
     # Gemini enhances search coverage
   
+  bing_jobs:
+    enabled: true
+    # ✅ NEW: Bing Jobs search - More lenient than Google
+    # Better scraping tolerance, good job aggregator
+    # Works well without stealth mode
+  
   # Indian Job Sites
   naukri:
     enabled: false

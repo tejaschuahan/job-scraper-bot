@@ -1190,6 +1190,117 @@ class JobScraper:
         
         return jobs
     
+    async def scrape_bing_jobs(self, query: str) -> List[Dict]:
+        """
+        Scrape Bing for Jobs
+        
+        Bing has more lenient scraping policies than Google and provides
+        a job search feature similar to Google Jobs. Less aggressive blocking.
+        
+        CSS Selectors:
+        - Job cards: 'li.job-card' or 'div.job-item'
+        - Title: 'h2.job-title' or 'a.job-card-title'
+        - Company: 'div.job-card-company' or 'span.company'
+        - Location: 'div.job-card-location'
+        """
+        jobs = []
+        site = "Bing Jobs"
+        
+        # Bing Jobs search URL
+        location = self.config.get('search', {}).get('default_location', 'Delhi')
+        query_encoded = quote_plus(f"{query} jobs in {location}")
+        
+        url = f"https://www.bing.com/jobs?q={query_encoded}&location={quote_plus(location)}"
+        
+        logger.info(f"Scraping {site} for: {query}")
+        html = await self.fetch_with_retry(
+            url,
+            site,
+            timeout=aiohttp.ClientTimeout(total=15),
+            headers={
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+                'Cache-Control': 'max-age=0'
+            }
+        )
+        
+        if not html:
+            logger.warning(f"Failed to fetch {site}")
+            return jobs
+        
+        try:
+            soup = BeautifulSoup(html, 'html.parser')
+            
+            # Bing job cards (multiple possible selectors)
+            job_cards = soup.find_all('li', class_='job-card') or \
+                       soup.find_all('div', class_='job-item') or \
+                       soup.find_all('article', class_='job') or \
+                       soup.find_all('div', {'data-testid': 'job-card'})
+            
+            logger.debug(f"Found {len(job_cards)} job cards on {site}")
+            
+            for card in job_cards[:20]:
+                try:
+                    # Try multiple selectors for each field
+                    title_elem = card.find('h2', class_='job-title') or \
+                                card.find('a', class_='job-card-title') or \
+                                card.find('h3') or \
+                                card.find('a', {'data-testid': 'job-title'})
+                    
+                    company_elem = card.find('div', class_='job-card-company') or \
+                                  card.find('span', class_='company') or \
+                                  card.find('div', class_='company-name') or \
+                                  card.find('span', {'data-testid': 'company-name'})
+                    
+                    location_elem = card.find('div', class_='job-card-location') or \
+                                   card.find('span', class_='location') or \
+                                   card.find('div', class_='job-location')
+                    
+                    salary_elem = card.find('div', class_='salary') or \
+                                 card.find('span', class_='job-salary')
+                    
+                    link_elem = card.find('a', class_='job-card-title') or \
+                               card.find('a') or \
+                               title_elem.find('a') if title_elem else None
+                    
+                    if not (title_elem and company_elem):
+                        continue
+                    
+                    job_url = ''
+                    if link_elem and link_elem.get('href'):
+                        job_url = link_elem['href']
+                        if not job_url.startswith('http'):
+                            job_url = f"https://www.bing.com{job_url}"
+                    
+                    job = {
+                        'title': title_elem.get_text(strip=True),
+                        'company': company_elem.get_text(strip=True),
+                        'url': job_url or url,
+                        'location': location_elem.get_text(strip=True) if location_elem else location,
+                        'salary': salary_elem.get_text(strip=True) if salary_elem else '',
+                        'site': site,
+                        'description': ''
+                    }
+                    
+                    jobs.append(job)
+                    
+                except Exception as e:
+                    logger.debug(f"Error parsing {site} job card: {e}")
+                    continue
+            
+            self.stats.record_scraped(site, len(jobs))
+            logger.info(f"Scraped {len(jobs)} jobs from {site}")
+            
+        except Exception as e:
+            logger.error(f"Error parsing {site} HTML: {e}")
+            self.stats.record_error(site)
+        
+        return jobs
+    
     # ========== MAIN SCRAPING LOGIC ==========
     
     async def scrape_remotive(self, query: str) -> List[Dict]:
@@ -1902,6 +2013,9 @@ class JobScraper:
                     tasks.append(self.scrape_indeed_stealth(query))
                 else:
                     tasks.append(self.scrape_indeed(query))
+            
+            if enabled_sites.get('bing_jobs', {}).get('enabled', False):
+                tasks.append(self.scrape_bing_jobs(query))
             
             if enabled_sites.get('remotive', {}).get('enabled', False):
                 tasks.append(self.scrape_remotive(query))
