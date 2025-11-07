@@ -121,7 +121,7 @@ sites:
     # ⚠️ DISABLED: Anti-scraping protection causing failures
     
   timesjobs:
-    enabled: false
+    enabled: true
     # 🇮🇳 TimesJobs - Part of Times Group
     # ⚠️ DISABLED: Anti-scraping protection causing failures
     
