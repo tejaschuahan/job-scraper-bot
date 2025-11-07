@@ -76,34 +76,33 @@ search:
 sites:
   linkedin:
     enabled: true
-    # ✅ WORKS: Most reliable scraper
+    # ✅ RELIABLE: Most stable scraper
     # LinkedIn's public job search (no auth required)
     
   remotive:
     enabled: true
-    # ✅ WORKS: Free API, no key needed!
-    # Best for remote tech jobs - Very reliable
+    # ✅ RELIABLE: Free API, no key needed!
+    # Best for remote tech jobs - Very stable
     
   glassdoor:
-    enabled: true
-    # ✅ ENABLED: Using stealth mode for scraping
-    # Gemini enhances search queries for better results
+    enabled: false
+    # ⚠️ DISABLED: Often blocked, needs stealth mode
+    # Enable only if Playwright is installed
     
   google_jobs:
-    enabled: true
-    # ✅ ENABLED: Using stealth mode for scraping
-    # Gemini generates optimized search queries
+    enabled: false
+    # ⚠️ DISABLED: Aggressive anti-bot protection
+    # Enable only if Playwright is installed
     
   indeed:
-    enabled: true
-    # ✅ ENABLED: Using stealth mode for scraping  
-    # Gemini enhances search coverage
+    enabled: false
+    # ⚠️ DISABLED: Rate limiting and blocking issues
+    # Enable only if Playwright is installed
   
   bing_jobs:
     enabled: true
-    # ✅ NEW: Bing Jobs search - More lenient than Google
-    # Better scraping tolerance, good job aggregator
-    # Works well without stealth mode
+    # ✅ TESTING: New scraper, should be more lenient
+    # Better scraping tolerance than Google
   
   # Indian Job Sites
   naukri:

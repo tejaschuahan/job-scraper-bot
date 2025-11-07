@@ -2085,12 +2085,23 @@ class JobScraper:
         logger.info(f"Running {len(tasks)} scraping tasks concurrently...")
         results = await asyncio.gather(*tasks, return_exceptions=True)
         
-        # Flatten results
-        for result in results:
+        # Flatten results and track per-site success
+        site_results = {}
+        for i, result in enumerate(results):
             if isinstance(result, list):
                 all_jobs.extend(result)
+                # Track which sites returned jobs
+                for job in result:
+                    site = job.get('site', 'Unknown')
+                    site_results[site] = site_results.get(site, 0) + 1
             elif isinstance(result, Exception):
-                logger.error(f"Scraping task failed: {result}")
+                logger.error(f"Scraping task {i+1} failed: {result}")
+        
+        # Log summary of scraping results
+        if site_results:
+            logger.info(f"🎯 Scraping results: {', '.join([f'{site}: {count}' for site, count in site_results.items()])}")
+        else:
+            logger.warning("⚠️ No jobs returned from any site! All scrapers may be blocked or failing.")
         
         return all_jobs
     

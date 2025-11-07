@@ -47,7 +47,7 @@ The bot is now running and waiting for your commands in Telegram!
 
 4. **Confirm to start**: Type `YES` to begin scraping
 
-5. **Receive jobs**: You'll get notifications for new jobs every 5 minutes!
+5. **Receive jobs**: You'll get notifications for new jobs every 6 hours!
 
 ### 💡 Example Conversation
 
