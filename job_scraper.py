@@ -611,13 +611,15 @@ class JobScraper:
         message = "\n".join(message_parts)
         
         try:
+            # Use chat_id from config (allows per-user messaging in interactive mode)
+            chat_id = self.config.get('telegram', {}).get('chat_id', self.chat_id)
             await self.bot.send_message(
-                chat_id=self.chat_id,
+                chat_id=chat_id,
                 text=message,
                 parse_mode='MarkdownV2',  # Use MarkdownV2 with escaped characters
                 disable_web_page_preview=format_config.get('disable_preview', False)
             )
-            logger.info(f"[SENT] {job['title']} at {job['company']}")
+            logger.info(f"[SENT] {job['title']} at {job['company']} to user {chat_id}")
         except TelegramError as e:
             logger.error(f"Telegram error: {e}")
             self.stats.record_error()
@@ -625,8 +627,10 @@ class JobScraper:
     async def send_alert(self, message: str):
         """Send alert message to Telegram"""
         try:
+            # Use chat_id from config (allows per-user messaging in interactive mode)
+            chat_id = self.config.get('telegram', {}).get('chat_id', self.chat_id)
             await self.bot.send_message(
-                chat_id=self.chat_id,
+                chat_id=chat_id,
                 text=message,
                 parse_mode='Markdown'
             )
@@ -637,12 +641,14 @@ class JobScraper:
         """Send statistics summary to Telegram"""
         summary = self.stats.get_summary()
         try:
+            # Use chat_id from config (allows per-user messaging in interactive mode)
+            chat_id = self.config.get('telegram', {}).get('chat_id', self.chat_id)
             await self.bot.send_message(
-                chat_id=self.chat_id,
+                chat_id=chat_id,
                 text=summary,
                 parse_mode='Markdown'
             )
-            logger.info("Sent statistics summary")
+            logger.info(f"Sent statistics summary to user {chat_id}")
         except TelegramError as e:
             logger.error(f"Failed to send stats: {e}")
     
