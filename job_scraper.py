@@ -272,6 +272,14 @@ class JobScraper:
         if chat_id.startswith('${') or os.getenv('TELEGRAM_CHAT_ID'):
             config['telegram']['chat_id'] = os.getenv('TELEGRAM_CHAT_ID', chat_id)
         
+        # Handle Gemini API key from environment
+        gemini_api_key = config.get('gemini', {}).get('api_key', '')
+        if gemini_api_key.startswith('${') or os.getenv('GEMINI_API_KEY'):
+            gemini_key = os.getenv('GEMINI_API_KEY', gemini_api_key)
+            if 'gemini' not in config:
+                config['gemini'] = {}
+            config['gemini']['api_key'] = gemini_key
+        
         self.telegram_token = config['telegram']['bot_token']
         self.chat_id = config['telegram']['chat_id']
         self.bot = Bot(token=self.telegram_token)
@@ -289,7 +297,12 @@ class JobScraper:
             try:
                 from gemini_ai import get_gemini_ai
                 from gemini_job_discovery import get_job_discovery
-                self.gemini = get_gemini_ai()
+                api_key = gemini_config.get('api_key')
+                if api_key and not api_key.startswith('${'):
+                    self.gemini = get_gemini_ai(api_key)
+                else:
+                    logger.warning("⚠️ Gemini API key not configured. AI features disabled.")
+                    logger.warning("⚠️ Set GEMINI_API_KEY environment variable or update config.yaml")
                 if self.gemini:
                     logger.info("✨ Gemini AI features enabled")
                     self.job_discovery = get_job_discovery(self.gemini)
@@ -496,36 +509,52 @@ class JobScraper:
         if self.gemini and gemini_config.get('features', {}).get('job_summarization', False):
             try:
                 ai_summary = self.gemini.summarize_job(job)
+                logger.debug(f"✅ AI summary generated for {job['title']}")
             except Exception as e:
-                logger.warning(f"Failed to generate AI summary: {e}")
+                error_msg = str(e).lower()
+                if 'quota' in error_msg or 'rate limit' in error_msg or '429' in error_msg:
+                    logger.error(f"⚠️ GEMINI QUOTA EXCEEDED: {e}")
+                    logger.error(f"⚠️ Gemini API daily limit reached! AI features disabled until reset.")
+                elif 'api key' in error_msg or 'authentication' in error_msg:
+                    logger.error(f"⚠️ GEMINI AUTH ERROR: Check your API key - {e}")
+                else:
+                    logger.warning(f"Failed to generate AI summary: {e}")
         
         if self.gemini and gemini_config.get('features', {}).get('job_quality_scoring', False):
             try:
                 score_data = self.gemini.score_job_quality(job)
                 quality_score = score_data.get('score')
             except Exception as e:
-                logger.warning(f"Failed to score job quality: {e}")
+                error_msg = str(e).lower()
+                if 'quota' not in error_msg and 'rate limit' not in error_msg:
+                    logger.warning(f"Failed to score job quality: {e}")
         
         # Estimate salary if not provided
         if self.gemini and not job.get('salary'):
             try:
                 salary_estimate = self.gemini.estimate_salary(job)
             except Exception as e:
-                logger.warning(f"Failed to estimate salary: {e}")
+                error_msg = str(e).lower()
+                if 'quota' not in error_msg and 'rate limit' not in error_msg:
+                    logger.warning(f"Failed to estimate salary: {e}")
         
         # Get company insights
         if self.gemini and gemini_config.get('features', {}).get('company_analysis', True):
             try:
                 company_insights = self.gemini.analyze_company(job.get('company', ''))
             except Exception as e:
-                logger.warning(f"Failed to analyze company: {e}")
+                error_msg = str(e).lower()
+                if 'quota' not in error_msg and 'rate limit' not in error_msg:
+                    logger.warning(f"Failed to analyze company: {e}")
         
         # Estimate competition
         if self.gemini and gemini_config.get('features', {}).get('competition_analysis', False):
             try:
                 competition_info = self.gemini.estimate_competition(job)
             except Exception as e:
-                logger.warning(f"Failed to estimate competition: {e}")
+                error_msg = str(e).lower()
+                if 'quota' not in error_msg and 'rate limit' not in error_msg:
+                    logger.warning(f"Failed to estimate competition: {e}")
         
         # Escape Markdown special characters to avoid parsing errors
         def escape_markdown(text: str) -> str:
